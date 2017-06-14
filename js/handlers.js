@@ -157,16 +157,23 @@ function terrainHandler() {
 function imageHandler() {
   reset();
 
+  var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+    url: 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+    requestWaterMask: true,
+    requestVertexNormals: true
+  });
+  viewer.terrainProvider = cesiumTerrainProviderMeshes;
+  var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
+  var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
+  viewer.camera.lookAt(target, offset);
+  viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
   viewer.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
     url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
   }))
 
-  viewer.entities.add({
-      rectangle: {
-          coordinates: Cesium.Rectangle.fromDegrees(30.315785, 59.939039, 31, 60),
-          material: new Cesium.ImageMaterialProperty({
-              image: 'data/logo.png'
-          }),
-      }
-  });
+viewer.imageryLayers.addImageryProvider(new Cesium.SingleTileImageryProvider({
+    url : 'data/test.jpg',
+    rectangle : Cesium.Rectangle.fromDegrees(86.922623, 27.986065, 88, 29)
+}));
 }
