@@ -163,11 +163,6 @@ function imageHandler() {
     requestVertexNormals: true
   });
   viewer.terrainProvider = cesiumTerrainProviderMeshes;
-  var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
-  var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
-  viewer.camera.lookAt(target, offset);
-  viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-
   viewer.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
     url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
   }))
@@ -176,4 +171,17 @@ viewer.imageryLayers.addImageryProvider(new Cesium.SingleTileImageryProvider({
     url : 'data/test.jpg',
     rectangle : Cesium.Rectangle.fromDegrees(86.922623, 27.986065, 88, 29)
 }));
+
+// 2. Using a HeadingPitchRange offset
+var center = new Cesium.Cartesian3(193151.37109781982, 5680242.326322874, 2939128.210421548);
+var heading = 5.7574023134647065;
+var pitch = -0.18353623564262533;
+var range = 5000.0;
+// viewer.camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
+viewer.camera.flyTo({
+  destination: center,
+  orientation: new Cesium.HeadingPitchRange(heading, pitch, range),
+  duration: 0
+});
+
 }
