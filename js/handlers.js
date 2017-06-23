@@ -1,22 +1,3 @@
-function geojsonHandler() {
-  reset();
-
-  viewer.imageryLayers.addImageryProvider(new Cesium.MapboxImageryProvider({
-    mapId: 'mapbox.streets-basic',
-    accessToken: 'pk.eyJ1IjoiYW5hbHl0aWNhbGdyYXBoaWNzIiwiYSI6ImNpd204Zm4wejAwNzYyeW5uNjYyZmFwdWEifQ.7i-VIZZWX8pd1bTfxIVj9g'
-  }))
-
-  viewer.dataSources.add(Cesium.GeoJsonDataSource.load('/data/st-petersburg.geojson', {
-    stroke: Cesium.Color.BLACK,
-    fill: Cesium.Color.GREEN.withAlpha(0.4),
-    strokeWidth: 3
-  }));
-
-  viewer.scene.camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(30.315785, 59.939039, 40000.0)
-  });
-}
-
 function pointsHandler() {
   reset();
 
@@ -25,7 +6,7 @@ function pointsHandler() {
     accessToken: 'pk.eyJ1IjoiYW5hbHl0aWNhbGdyYXBoaWNzIiwiYSI6ImNpd204Zm4wejAwNzYyeW5uNjYyZmFwdWEifQ.7i-VIZZWX8pd1bTfxIVj9g'
   }))
 
-  Cesium.GeoJsonDataSource.load('/data/spb_points.geojson', {
+  Cesium.GeoJsonDataSource.load('/data/test_cesium/points.json', {
       markerSymbol: 'town-hall'
     })
     .then(function(source) {
@@ -51,7 +32,7 @@ function pointsHandler() {
   });
 }
 
-function geojsonExtrudedHandler() {
+function contoursHandler() {
   reset();
 
   viewer.imageryLayers.addImageryProvider(new Cesium.MapboxImageryProvider({
@@ -59,7 +40,7 @@ function geojsonExtrudedHandler() {
     accessToken: 'pk.eyJ1IjoiYW5hbHl0aWNhbGdyYXBoaWNzIiwiYSI6ImNpd204Zm4wejAwNzYyeW5uNjYyZmFwdWEifQ.7i-VIZZWX8pd1bTfxIVj9g'
   }))
 
-  Cesium.GeoJsonDataSource.load('/data/st-petersburg.geojson')
+  Cesium.GeoJsonDataSource.load('/data/test_cesium/contours.json')
     .then(function(source) {
       viewer.dataSources.add(source);
 
@@ -67,10 +48,13 @@ function geojsonExtrudedHandler() {
       var entities = source.entities.values;
       for (var i = 0; i < entities.length; i++) {
         var entity = entities[i];
-        entity.polygon.outline = false;
-        entity.polygon.material = Cesium.Color.fromRandom({
-          alpha: 1
-        })
+        var id = entity.properties.cartodb_id.getValue();
+        var color = [Cesium.Color.GREEN, Cesium.Color.YELLOW, Cesium.Color.RED][id % 3];
+        
+        entity.polygon.outline = true;
+        entity.polygon.outlineColor = Cesium.Color.BLACK;        
+        entity.polygon.outlineWidth = 2;
+        entity.polygon.material = color;
         entity.polygon.extrudedHeight = Cesium.Math.nextRandomNumber() * 5000;
       }
     });
@@ -80,78 +64,17 @@ function geojsonExtrudedHandler() {
   });
 }
 
-function planeHandler() {
-  reset();
-
-  viewer.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
-    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
-  }))
-
-  Cesium.Math.setRandomNumberSeed(3);
-
-  var start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
-  var stop = Cesium.JulianDate.addSeconds(start, 360, new Cesium.JulianDate());
-
-  viewer.clock.startTime = start.clone();
-  viewer.clock.stopTime = stop.clone();
-  viewer.clock.currentTime = start.clone();
-  viewer.clock.multiplier = 10;
-
-  viewer.timeline.zoomTo(start, stop);
-
-  function computeCirclularFlight(lon, lat, radius) {
-    var property = new Cesium.SampledPositionProperty();
-    for (var i = 0; i <= 360; i += 45) {
-      var radians = Cesium.Math.toRadians(i);
-      var time = Cesium.JulianDate.addSeconds(start, i * 10, new Cesium.JulianDate());
-      var position = Cesium.Cartesian3.fromDegrees(lon + (radius * 1.5 * Math.cos(radians)), lat + (radius * Math.sin(radians)), Cesium.Math.nextRandomNumber() * 500 + 500);
-      property.addSample(time, position);
-    }
-    return property;
-  }
-
-  var position = computeCirclularFlight(30.315785, 59.939039, 0.03);
-  var entity = viewer.entities.add({
-
-    availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
-      start: start,
-      stop: stop
-    })]),
-
-    position: position,
-
-    orientation: new Cesium.VelocityOrientationProperty(position),
-
-    model: {
-      uri: 'data/Cesium_Air.gltf',
-      minimumPixelSize: 64,
-    }
-  });
-
-  viewer.trackedEntity = entity;
-
-  entity.position.setInterpolationOptions({
-    interpolationDegree: 5,
-    interpolationAlgorithm: Cesium.LagrangePolynomialApproximation
-  });
-
-}
-
 function terrainHandler() {
   reset();
-  viewer.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
-    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
-  }))
+  viewer.imageryLayers.addImageryProvider(new Cesium.GridImageryProvider())
   var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-    url: 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestWaterMask: true,
-    requestVertexNormals: true
+    url: 'http://192.168.99.100:8080/tilesets/height3'
   });
   viewer.terrainProvider = cesiumTerrainProviderMeshes;
-  var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
-  var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
-  viewer.camera.lookAt(target, offset);
-  viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+  viewer.scene.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(37.57, 55.47, 10000.0)
+  });
 }
 
 function imageHandler() {
@@ -159,29 +82,31 @@ function imageHandler() {
 
   var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     url: 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestWaterMask: true,
+    requestWaterMask: false,
     requestVertexNormals: true
   });
   viewer.terrainProvider = cesiumTerrainProviderMeshes;
+
   viewer.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
     url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
   }))
 
-viewer.imageryLayers.addImageryProvider(new Cesium.SingleTileImageryProvider({
-    url : 'data/test.jpg',
-    rectangle : Cesium.Rectangle.fromDegrees(86.922623, 27.986065, 88, 29)
-}));
+  var tms = Cesium.createTileMapServiceImageryProvider({
+    url : '/data/test_cesium/image',
+    fileExtension: 'png'
+  }); 
 
-// 2. Using a HeadingPitchRange offset
-var center = new Cesium.Cartesian3(193151.37109781982, 5680242.326322874, 2939128.210421548);
-var heading = 5.7574023134647065;
-var pitch = -0.18353623564262533;
-var range = 5000.0;
-// viewer.camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
-viewer.camera.flyTo({
-  destination: center,
-  orientation: new Cesium.HeadingPitchRange(heading, pitch, range),
-  duration: 0
-});
+  viewer.imageryLayers.addImageryProvider(tms);
+  
+  var center = Cesium.Cartesian3.fromDegrees(-122.53, 38.1, 40000.0)
+  var heading = 5.755541504942888;
+  var pitch = -0.18077455945038823;
+  var range = 5000.0;
+  
+  viewer.camera.flyTo({
+    destination: new Cesium.Cartesian3( -2716003.1025927025, -4277713.204441832, 3879433.2266100366 ),
+    orientation: new Cesium.HeadingPitchRange(heading, pitch, range),
+    duration: 0
+  });
 
 }
