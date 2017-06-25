@@ -6,7 +6,7 @@ function pointsHandler() {
     accessToken: 'pk.eyJ1IjoiYW5hbHl0aWNhbGdyYXBoaWNzIiwiYSI6ImNpd204Zm4wejAwNzYyeW5uNjYyZmFwdWEifQ.7i-VIZZWX8pd1bTfxIVj9g'
   }))
 
-  Cesium.GeoJsonDataSource.load('/data/test_cesium/points.json', {
+  Cesium.GeoJsonDataSource.load('/data/points.json', {
       markerSymbol: 'town-hall'
     })
     .then(function(source) {
@@ -40,7 +40,7 @@ function contoursHandler() {
     accessToken: 'pk.eyJ1IjoiYW5hbHl0aWNhbGdyYXBoaWNzIiwiYSI6ImNpd204Zm4wejAwNzYyeW5uNjYyZmFwdWEifQ.7i-VIZZWX8pd1bTfxIVj9g'
   }))
 
-  Cesium.GeoJsonDataSource.load('/data/test_cesium/contours.json')
+  Cesium.GeoJsonDataSource.load('/data/contours.json')
     .then(function(source) {
       viewer.dataSources.add(source);
 
@@ -64,19 +64,6 @@ function contoursHandler() {
   });
 }
 
-function terrainHandler() {
-  reset();
-  viewer.imageryLayers.addImageryProvider(new Cesium.GridImageryProvider())
-  var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-    url: 'http://192.168.99.100:8080/tilesets/height3'
-  });
-  viewer.terrainProvider = cesiumTerrainProviderMeshes;
-
-  viewer.scene.camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(37.57, 55.47, 10000.0)
-  });
-}
-
 function imageHandler() {
   reset();
 
@@ -92,7 +79,7 @@ function imageHandler() {
   }))
 
   var tms = Cesium.createTileMapServiceImageryProvider({
-    url : '/data/test_cesium/image',
+    url : '/data/image',
     fileExtension: 'png'
   }); 
 
